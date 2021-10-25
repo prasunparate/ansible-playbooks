@@ -1,0 +1,45 @@
+---
+ - hosts: all
+   tasks:
+   - name: Clone a github repository
+     git:
+       repo: https://github.com/prasunparate/artifacts.git
+       dest: /root/git
+       clone: yes
+       update: yes
+   - name: Make sure that we can connect to the machine
+     ping:
+
+   - name: Installing Tomcat
+     yum:
+       name: tomcat
+       state: present
+   - name: Ensure Tomcat is running
+     service:
+       name: tomcat
+       state: started
+   - name: Installing Tomcat webapps
+     yum:
+       name: tomcat-webapps
+       state: present
+   - name: Installing Tomcat Admin webapps
+     yum:
+       name: tomcat-admin-webapps
+       state: present
+   - name: line insert
+     lineinfile:
+       path: /usr/share/tomcat/conf/tomcat.conf
+       line: 'JAVA_OPTS="-Djava.security.egd=file:/dev/./urandom -Djava.awt.headless=true -Xmx256m -XX:MaxPermSize=128m -XX:+UseConcMarkSweepGC"'
+   - name: Creating a xml file
+     copy:
+       dest: "/usr/share/tomcat/conf/tomcat-users.xml"
+       content: |
+        <tomcat-users>
+              <user username="admin" password="password" roles="manager-gui,admin-gui"/>
+        </tomcat-users>
+   - name: Reloading Tomcat Server
+     service:
+       name: tomcat
+       state: restarted
+   - name: Extracting the war file
+     command: sh /root/deploy_in_tomcat.sh  
